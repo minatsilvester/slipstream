@@ -12,6 +12,8 @@ defmodule Slipstream.Application do
       Slipstream.Repo,
       {DNSCluster, query: Application.get_env(:slipstream, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Slipstream.PubSub},
+      {Registry, keys: :unique, name: Slipstream.Ingestion.Registry},
+      {DynamicSupervisor, name: Slipstream.Ingestion.Supervisor, strategy: :one_for_one},
       # Start a worker by calling: Slipstream.Worker.start_link(arg)
       # {Slipstream.Worker, arg},
       # Start to serve requests, typically the last entry

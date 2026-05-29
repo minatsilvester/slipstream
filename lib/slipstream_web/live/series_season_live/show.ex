@@ -15,6 +15,13 @@ defmodule SlipstreamWeb.SeriesSeasonLive.Show do
             <.icon name="hero-arrow-left" /> Seasons
           </.button>
           <.button
+            id="season-sync-action"
+            phx-click="sync_calendar"
+            disabled={@sync_status == :processing}
+          >
+            <.icon name="hero-arrow-path" /> Sync calendar
+          </.button>
+          <.button
             variant="primary"
             navigate={~p"/admin/series/#{@series}/seasons/#{@season}/edit?return_to=show"}
           >
@@ -75,6 +82,34 @@ defmodule SlipstreamWeb.SeriesSeasonLive.Show do
               </dd>
             </div>
           </dl>
+
+          <div
+            id="season-sync-status"
+            class="mt-6 rounded-box border border-base-300 bg-base-200/40 p-4"
+          >
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-base-content/60">
+                  Calendar sync
+                </p>
+                <p class="mt-1 text-sm text-base-content/70">
+                  {sync_status_label(@sync_status)}
+                </p>
+              </div>
+
+              <span class={["badge", sync_badge_class(@sync_status)]}>
+                {sync_status_label(@sync_status)}
+              </span>
+            </div>
+
+            <p :if={@sync_entries != []} class="mt-4 text-sm text-base-content/80">
+              Parsed entries: {@sync_entries_count}
+            </p>
+
+            <p :if={@sync_error} class="mt-3 text-sm text-error">
+              {@sync_error}
+            </p>
+          </div>
         </section>
 
         <aside class="space-y-6">
@@ -113,13 +148,84 @@ defmodule SlipstreamWeb.SeriesSeasonLive.Show do
     series = Motorsport.get_series!(series_id)
     season = Motorsport.get_season!(series, id)
 
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(
+        Slipstream.PubSub,
+        Slipstream.Ingestion.Formula1CalendarSync.topic(season.id)
+      )
+    end
+
     {:ok,
      socket
      |> assign(:page_title, "Show Season")
      |> assign(:series, series)
-     |> assign(:season, season)}
+     |> assign(:season, season)
+     |> assign(:sync_status, :idle)
+     |> assign(:sync_entries, [])
+     |> assign(:sync_entries_count, 0)
+     |> assign(:sync_error, nil)}
+  end
+
+  @impl true
+  def handle_event("sync_calendar", _params, socket) do
+    case Motorsport.sync_season_calendar(socket.assigns.season) do
+      {:ok, _pid} ->
+        {:noreply,
+         socket
+         |> assign(:sync_status, :processing)
+         |> assign(:sync_entries, [])
+         |> assign(:sync_entries_count, 0)
+         |> assign(:sync_error, nil)}
+
+      {:error, {:already_started, _pid}} ->
+        {:noreply, put_flash(socket, :info, "Calendar sync is already running")}
+
+      {:error, reason} ->
+        {:noreply,
+         socket
+         |> assign(:sync_status, :failed)
+         |> assign(:sync_error, inspect(reason))}
+    end
+  end
+
+  @impl true
+  def handle_info({:formula1_calendar_sync, payload}, socket) do
+    socket =
+      case payload.status do
+        :processing ->
+          socket
+          |> assign(:sync_status, :processing)
+          |> assign(:sync_error, nil)
+
+        :done ->
+          socket
+          |> assign(:sync_status, :done)
+          |> assign(:sync_entries, payload.entries || [])
+          |> assign(:sync_entries_count, length(payload.entries || []))
+          |> assign(:sync_error, nil)
+
+        :failed ->
+          socket
+          |> assign(:sync_status, :failed)
+          |> assign(:sync_error, payload.error)
+
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
   end
 
   defp format_date(nil), do: "Not set"
   defp format_date(date), do: Calendar.strftime(date, "%Y-%m-%d")
+
+  defp sync_status_label(:idle), do: "Idle"
+  defp sync_status_label(:processing), do: "Processing"
+  defp sync_status_label(:done), do: "Complete"
+  defp sync_status_label(:failed), do: "Failed"
+
+  defp sync_badge_class(:idle), do: "badge-ghost"
+  defp sync_badge_class(:processing), do: "badge-warning"
+  defp sync_badge_class(:done), do: "badge-success"
+  defp sync_badge_class(:failed), do: "badge-error"
 end

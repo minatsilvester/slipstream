@@ -238,4 +238,25 @@ defmodule Slipstream.Motorsport do
   def change_series_source(%SeriesSource{} = series_source, attrs \\ %{}) do
     SeriesSource.changeset(series_source, attrs)
   end
+
+  @doc """
+  Returns the active calendar source for a series.
+  """
+  def get_series_calendar_source!(%Season{} = season) do
+    season = Repo.preload(season, :series)
+
+    SeriesSource
+    |> where([source], source.series_id == ^season.series_id)
+    |> where([source], source.source_type == "calendar")
+    |> where([source], source.is_active == true)
+    |> order_by([source], asc: source.priority, asc: source.name)
+    |> Repo.one!()
+  end
+
+  @doc """
+  Starts a Formula 1 season calendar sync worker.
+  """
+  def sync_season_calendar(%Season{} = season) do
+    Slipstream.Ingestion.Formula1CalendarSync.start_sync(season)
+  end
 end
