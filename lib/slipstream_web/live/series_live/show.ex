@@ -14,6 +14,9 @@ defmodule SlipstreamWeb.SeriesLive.Show do
           <.button navigate={~p"/admin/series"}>
             <.icon name="hero-arrow-left" />
           </.button>
+          <.button navigate={~p"/admin/series/#{@series}/sources"}>
+            <.icon name="hero-rss" /> Sources
+          </.button>
           <.button variant="primary" navigate={~p"/admin/series/#{@series}/edit?return_to=show"}>
             <.icon name="hero-pencil-square" /> Edit series
           </.button>
@@ -29,7 +32,7 @@ defmodule SlipstreamWeb.SeriesLive.Show do
         <:item title="Logo url">{@series.logo_url}</:item>
         <:item title="Official website">{@series.official_website}</:item>
         <:item title="Is active">{@series.is_active}</:item>
-        <:item title="Metadata">{@series.metadata}</:item>
+        <:item title="Metadata">{inspect(@series.metadata)}</:item>
       </.list>
     </Layouts.app>
     """

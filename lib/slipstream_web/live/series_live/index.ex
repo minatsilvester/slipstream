@@ -29,7 +29,7 @@ defmodule SlipstreamWeb.SeriesLive.Index do
         <:col :let={{_id, series}} label="Logo url">{series.logo_url}</:col>
         <:col :let={{_id, series}} label="Official website">{series.official_website}</:col>
         <:col :let={{_id, series}} label="Is active">{series.is_active}</:col>
-        <:col :let={{_id, series}} label="Metadata">{series.metadata}</:col>
+        <:col :let={{_id, series}} label="Metadata">{inspect(series.metadata)}</:col>
         <:action :let={{_id, series}}>
           <div class="sr-only">
             <.link navigate={~p"/admin/series/#{series}"}>Show</.link>
