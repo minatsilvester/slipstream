@@ -34,10 +34,8 @@ defmodule Slipstream.Motorsport.Series do
     |> validate_required([
       :name,
       :short_name,
-      :description,
       :sport_type,
       :governing_body,
-      :logo_url,
       :official_website,
       :is_active
     ])
