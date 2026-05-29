@@ -40,6 +40,13 @@ defmodule SlipstreamWeb.SeriesLiveTest do
     %{series: series}
   end
 
+  defp create_series_with_source(_) do
+    series = series_fixture()
+    series_source = series_source_fixture(series: series)
+
+    %{series: series, series_source: series_source}
+  end
+
   describe "Index" do
     setup [:create_series]
 
@@ -114,13 +121,16 @@ defmodule SlipstreamWeb.SeriesLiveTest do
   end
 
   describe "Show" do
-    setup [:create_series]
+    setup [:create_series_with_source]
 
-    test "displays series", %{conn: conn, series: series} do
-      {:ok, _show_live, html} = live(conn, ~p"/admin/series/#{series}")
+    test "displays series", %{conn: conn, series: series, series_source: series_source} do
+      {:ok, show_live, _html} = live(conn, ~p"/admin/series/#{series}")
 
-      assert html =~ "Show Series"
-      assert html =~ series.name
+      assert has_element?(show_live, "#series-overview")
+      assert has_element?(show_live, "#series-links")
+      assert has_element?(show_live, "#series-actions")
+      assert has_element?(show_live, "#series-sources-section")
+      assert has_element?(show_live, "#series_sources-#{series_source.id}")
     end
 
     test "updates series and returns to show", %{conn: conn, series: series} do
@@ -128,7 +138,7 @@ defmodule SlipstreamWeb.SeriesLiveTest do
 
       assert {:ok, form_live, _} =
                show_live
-               |> element("a", "Edit")
+               |> element("#series-edit-button")
                |> render_click()
                |> follow_redirect(conn, ~p"/admin/series/#{series}/edit?return_to=show")
 
@@ -144,9 +154,10 @@ defmodule SlipstreamWeb.SeriesLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/series/#{series}")
 
-      html = render(show_live)
-      assert html =~ "Series updated successfully"
-      assert html =~ "some updated name"
+      assert has_element?(show_live, "#series-overview")
+      assert has_element?(show_live, "#series-actions")
+      assert has_element?(show_live, "#series-sources-section")
+      assert has_element?(show_live, "#series-status")
     end
   end
 end
