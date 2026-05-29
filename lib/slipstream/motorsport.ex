@@ -8,6 +8,7 @@ defmodule Slipstream.Motorsport do
 
   alias Slipstream.Motorsport.Series
   alias Slipstream.Motorsport.Season
+  alias Slipstream.Motorsport.Event
 
   @doc """
   Returns the list of series.
@@ -156,6 +157,61 @@ defmodule Slipstream.Motorsport do
   """
   def change_season(%Season{} = season, attrs \\ %{}) do
     Season.changeset(season, attrs)
+  end
+
+  @doc """
+  Returns the list of events for a season.
+  """
+  def list_events(%Season{} = season), do: list_events(season.id)
+
+  def list_events(season_id) do
+    Event
+    |> where([event], event.season_id == ^season_id)
+    |> order_by([event], asc: event.round, asc: event.starts_on, asc: event.id)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single event scoped to its parent season.
+  """
+  def get_event!(%Season{} = season, id), do: get_event!(season.id, id)
+
+  def get_event!(season_id, id) do
+    Repo.get_by!(Event, id: id, season_id: season_id)
+  end
+
+  @doc """
+  Creates an event for a season.
+  """
+  def create_event(%Season{} = season, attrs), do: create_event(season.id, attrs)
+
+  def create_event(season_id, attrs) do
+    %Event{season_id: season_id}
+    |> Event.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates an event.
+  """
+  def update_event(%Event{} = event, attrs) do
+    event
+    |> Event.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes an event.
+  """
+  def delete_event(%Event{} = event) do
+    Repo.delete(event)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking event changes.
+  """
+  def change_event(%Event{} = event, attrs \\ %{}) do
+    Event.changeset(event, attrs)
   end
 
   alias Slipstream.Motorsport.SeriesSource

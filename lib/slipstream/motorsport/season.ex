@@ -8,6 +8,7 @@ defmodule Slipstream.Motorsport.Season do
     field :ends_on, :date
     field :is_current, :boolean, default: false
     belongs_to :series, Slipstream.Motorsport.Series
+    has_many :events, Slipstream.Motorsport.Event
 
     timestamps(type: :utc_datetime)
   end

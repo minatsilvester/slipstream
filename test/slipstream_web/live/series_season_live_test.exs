@@ -108,6 +108,8 @@ defmodule SlipstreamWeb.SeriesSeasonLiveTest do
       assert has_element?(show_live, "#season-overview")
       assert has_element?(show_live, "#season-series")
       assert has_element?(show_live, "#season-actions")
+      assert has_element?(show_live, "#season-events-entry")
+      assert has_element?(show_live, "#season-events-action")
     end
 
     test "updates season and returns to show", %{conn: conn, series: series, season: season} do
@@ -133,6 +135,7 @@ defmodule SlipstreamWeb.SeriesSeasonLiveTest do
       assert has_element?(show_live, "#season-overview")
       assert has_element?(show_live, "#season-actions")
       assert has_element?(show_live, "#season-series")
+      assert has_element?(show_live, "#season-events-entry")
     end
   end
 end
