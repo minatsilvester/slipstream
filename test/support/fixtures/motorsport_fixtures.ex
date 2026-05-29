@@ -25,4 +25,32 @@ defmodule Slipstream.MotorsportFixtures do
 
     series
   end
+
+  @doc """
+  Generate a series_source.
+  """
+  def series_source_fixture(attrs \\ %{}) do
+    attrs = Map.new(attrs)
+    series = Map.get_lazy(attrs, :series, fn -> series_fixture() end)
+    attrs = Map.drop(attrs, [:series])
+
+    {:ok, series_source} =
+      attrs
+      |> Enum.into(%{
+        extraction_config: %{"item_selector" => ".race-card"},
+        format: "html",
+        http_method: "GET",
+        is_active: true,
+        name: "some name",
+        notes: "some notes",
+        priority: 0,
+        request_headers: %{},
+        request_params: %{},
+        source_type: "calendar",
+        url: "https://example.com/calendar"
+      })
+      |> then(&Slipstream.Motorsport.create_series_source(series, &1))
+
+    series_source
+  end
 end

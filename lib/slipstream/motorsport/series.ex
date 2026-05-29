@@ -12,6 +12,7 @@ defmodule Slipstream.Motorsport.Series do
     field :official_website, :string
     field :is_active, :boolean, default: false
     field :metadata, :map
+    has_many :sources, Slipstream.Motorsport.SeriesSource
 
     timestamps(type: :utc_datetime)
   end
@@ -19,7 +20,26 @@ defmodule Slipstream.Motorsport.Series do
   @doc false
   def changeset(series, attrs) do
     series
-    |> cast(attrs, [:name, :short_name, :description, :sport_type, :governing_body, :logo_url, :official_website, :is_active, :metadata])
-    |> validate_required([:name, :short_name, :description, :sport_type, :governing_body, :logo_url, :official_website, :is_active])
+    |> cast(attrs, [
+      :name,
+      :short_name,
+      :description,
+      :sport_type,
+      :governing_body,
+      :logo_url,
+      :official_website,
+      :is_active,
+      :metadata
+    ])
+    |> validate_required([
+      :name,
+      :short_name,
+      :description,
+      :sport_type,
+      :governing_body,
+      :logo_url,
+      :official_website,
+      :is_active
+    ])
   end
 end
