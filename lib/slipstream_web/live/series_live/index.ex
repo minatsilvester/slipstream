@@ -22,14 +22,9 @@ defmodule SlipstreamWeb.SeriesLive.Index do
         row_click={fn {_id, series} -> JS.navigate(~p"/admin/series/#{series}") end}
       >
         <:col :let={{_id, series}} label="Name">{series.name}</:col>
-        <:col :let={{_id, series}} label="Short name">{series.short_name}</:col>
         <:col :let={{_id, series}} label="Description">{series.description}</:col>
         <:col :let={{_id, series}} label="Sport type">{series.sport_type}</:col>
         <:col :let={{_id, series}} label="Governing body">{series.governing_body}</:col>
-        <:col :let={{_id, series}} label="Logo url">{series.logo_url}</:col>
-        <:col :let={{_id, series}} label="Official website">{series.official_website}</:col>
-        <:col :let={{_id, series}} label="Is active">{series.is_active}</:col>
-        <:col :let={{_id, series}} label="Metadata">{inspect(series.metadata)}</:col>
         <:action :let={{_id, series}}>
           <div class="sr-only">
             <.link navigate={~p"/admin/series/#{series}"}>Show</.link>
