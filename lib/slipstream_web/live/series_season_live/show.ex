@@ -137,6 +137,24 @@ defmodule SlipstreamWeb.SeriesSeasonLive.Show do
               </.button>
             </div>
           </section>
+
+          <section id="season-events-entry" class="rounded-box border border-base-300 bg-base-100 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/60">
+              Events
+            </p>
+            <p class="mt-3 text-sm text-base-content/70">
+              Review rounds imported from the scraper and correct postponed or cancelled sessions.
+            </p>
+            <div class="mt-4">
+              <.button
+                id="season-events-action"
+                variant="primary"
+                navigate={~p"/admin/series/#{@series}/seasons/#{@season}/events"}
+              >
+                <.icon name="hero-calendar-days" /> Manage events
+              </.button>
+            </div>
+          </section>
         </aside>
       </div>
     </Layouts.app>

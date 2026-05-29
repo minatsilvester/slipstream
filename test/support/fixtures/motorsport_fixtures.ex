@@ -74,4 +74,31 @@ defmodule Slipstream.MotorsportFixtures do
 
     season
   end
+
+  @doc """
+  Generate an event.
+  """
+  def event_fixture(attrs \\ %{}) do
+    attrs = Map.new(attrs)
+    season = Map.get_lazy(attrs, :season, fn -> season_fixture() end)
+    attrs = Map.drop(attrs, [:season])
+
+    {:ok, event} =
+      attrs
+      |> Enum.into(%{
+        country: "Italy",
+        ends_on: ~D[2026-05-31],
+        location: "Monza",
+        name: "Formula 1 Italian Grand Prix",
+        round: 1,
+        sessions: %{},
+        starts_on: ~D[2026-05-29],
+        status: "scheduled",
+        timezone: "Europe/Rome",
+        venue_name: "Autodromo Nazionale Monza"
+      })
+      |> then(&Slipstream.Motorsport.create_event(season, &1))
+
+    event
+  end
 end

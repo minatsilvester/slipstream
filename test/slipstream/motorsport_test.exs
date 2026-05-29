@@ -391,4 +391,122 @@ defmodule Slipstream.MotorsportTest do
       assert %Ecto.Changeset{} = Motorsport.change_series_source(series_source)
     end
   end
+
+  describe "events" do
+    alias Slipstream.Motorsport.Event
+
+    import Slipstream.MotorsportFixtures
+
+    @valid_attrs %{
+      round: 1,
+      name: "Formula 1 Monaco Grand Prix",
+      venue_name: "Circuit de Monaco",
+      location: "Monte Carlo",
+      country: "Monaco",
+      starts_on: ~D[2026-06-05],
+      ends_on: ~D[2026-06-07],
+      timezone: "Europe/Monaco",
+      status: "scheduled",
+      sessions: %{"race" => %{"date" => "2026-06-07"}}
+    }
+
+    @invalid_attrs %{
+      round: nil,
+      name: nil,
+      status: nil
+    }
+
+    test "list_events/1 returns events scoped to a season" do
+      season = season_fixture()
+      other_season = season_fixture(year: 2027)
+      event = event_fixture(season: season, round: 2)
+      _other_event = event_fixture(season: other_season, round: 3)
+
+      assert [listed_event] = Motorsport.list_events(season)
+      assert listed_event.id == event.id
+    end
+
+    test "get_event!/2 returns the event with given id in the season scope" do
+      season = season_fixture()
+      other_season = season_fixture(year: 2027)
+      event = event_fixture(season: season, round: 2)
+
+      assert Motorsport.get_event!(season, event.id).id == event.id
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Motorsport.get_event!(other_season, event.id)
+      end
+    end
+
+    test "create_event/2 with valid data creates an event" do
+      season = season_fixture()
+
+      assert {:ok, %Event{} = event} = Motorsport.create_event(season, @valid_attrs)
+      assert event.season_id == season.id
+      assert event.round == 1
+      assert event.name == "Formula 1 Monaco Grand Prix"
+      assert event.status == "scheduled"
+      assert event.sessions == %{"race" => %{"date" => "2026-06-07"}}
+    end
+
+    test "create_event/2 with invalid data returns error changeset" do
+      season = season_fixture()
+      assert {:error, %Ecto.Changeset{}} = Motorsport.create_event(season, @invalid_attrs)
+    end
+
+    test "create_event/2 enforces unique rounds per season" do
+      season = season_fixture()
+      assert {:ok, %Event{}} = Motorsport.create_event(season, @valid_attrs)
+      assert {:error, changeset} = Motorsport.create_event(season, @valid_attrs)
+
+      assert "has already been taken" in errors_on(changeset).round
+    end
+
+    test "update_event/2 with valid data updates the event" do
+      event = event_fixture()
+
+      update_attrs = %{
+        round: 10,
+        name: "Updated Grand Prix",
+        venue_name: "Updated Circuit",
+        location: "Updated City",
+        country: "Updated Country",
+        starts_on: ~D[2026-09-04],
+        ends_on: ~D[2026-09-06],
+        timezone: "UTC",
+        status: "postponed",
+        sessions: %{"race" => %{"date" => "2026-09-06"}}
+      }
+
+      assert {:ok, %Event{} = event} = Motorsport.update_event(event, update_attrs)
+      assert event.round == 10
+      assert event.name == "Updated Grand Prix"
+      assert event.status == "postponed"
+      assert event.sessions == %{"race" => %{"date" => "2026-09-06"}}
+    end
+
+    test "update_event/2 with invalid data returns error changeset" do
+      event = event_fixture()
+      assert {:error, %Ecto.Changeset{}} = Motorsport.update_event(event, @invalid_attrs)
+      persisted_event = Motorsport.get_event!(event.season_id, event.id)
+      assert persisted_event.round == event.round
+      assert persisted_event.name == event.name
+      assert persisted_event.status == event.status
+      assert persisted_event.sessions == event.sessions
+    end
+
+    test "delete_event/1 deletes the event" do
+      event = event_fixture()
+      assert {:ok, %Event{}} = Motorsport.delete_event(event)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Motorsport.get_event!(event.season_id, event.id)
+      end
+    end
+
+    test "change_event/1 returns an event changeset" do
+      event = event_fixture()
+      assert %Ecto.Changeset{} = Motorsport.change_event(event)
+    end
+  end
 end

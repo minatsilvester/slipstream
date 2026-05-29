@@ -1,6 +1,6 @@
 # Calendar Ingestion Plan
 
-Last updated: 2026-05-29
+Last updated: 2026-05-30
 
 This file is the durable tracker for the Formula 1 calendar ingestion work.  
 Keep it updated as tasks land so the plan survives context loss.
@@ -108,16 +108,16 @@ Proposed fields:
 2. Load the active Formula 1 series source.
 3. Fetch the calendar page with `Req`.
 4. Parse the schedule list with `Floki`.
-5. Normalize round data into season/event structs.
-6. Upsert the current season.
-7. Upsert all events for that season.
-8. Persist an ingestion run record.
-9. Mark the source success or failure metadata.
+5. Normalize round data into season/event structs. Status: partial
+6. Upsert the current season. Status: done
+7. Upsert all events for that season. Status: not started
+8. Persist an ingestion run record. Status: not started
+9. Mark the source success or failure metadata. Status: partial
 
 ## Process Model
 
 ### Supervisor
-Status: not started
+Status: done
 
 Use a `DynamicSupervisor` dedicated to ingestion jobs.
 
@@ -127,7 +127,7 @@ Responsibilities:
 - avoid keeping scraper processes alive when idle
 
 ### Worker
-Status: not started
+Status: done
 
 Proposed worker responsibilities:
 - fetch page
@@ -142,12 +142,12 @@ Suggested module shape:
 ## UI Work
 
 ### Admin actions
-Status: not started
+Status: done
 
 Add a manual sync action to the series show page or source page.
 
 ### Monitoring
-Status: not started
+Status: partial
 
 Expose basic sync status in the admin UI:
 - last success
@@ -162,11 +162,11 @@ Expose basic sync status in the admin UI:
 | Add `seasons` table | done | Unique by series/year |
 | Add `events` table | not started | Store parsed race calendar |
 | Add ingestion run tracking | not started | Keep raw payload and status |
-| Add calendar parser for F1 2026 page | not started | Parse official page HTML |
-| Add dynamic supervisor for scraper workers | not started | Transient only |
-| Add manual sync domain function | not started | Domain service entry point |
-| Add admin sync action | not started | Button/trigger in LiveView |
-| Add tests for parsing and persistence | not started | Focus on domain and worker behavior |
+| Add calendar parser for F1 2026 page | done | Parser exists and is tested against the F1 page shape |
+| Add dynamic supervisor for scraper workers | done | Added to application supervision tree |
+| Add manual sync domain function | done | `Motorsport.sync_season_calendar/1` |
+| Add admin sync action | done | Season show page trigger + status display |
+| Add tests for parsing and persistence | partial | Parser and LiveView tests exist; persistence tests remain |
 
 ## Notes
 

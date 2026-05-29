@@ -31,6 +31,14 @@ defmodule SlipstreamWeb.Router do
     live "/series/:series_id/seasons/new", SeriesSeasonLive.Form, :new
     live "/series/:series_id/seasons/:id", SeriesSeasonLive.Show, :show
     live "/series/:series_id/seasons/:id/edit", SeriesSeasonLive.Form, :edit
+    live "/series/:series_id/seasons/:season_id/events", SeriesSeasonEventLive.Index, :index
+    live "/series/:series_id/seasons/:season_id/events/new", SeriesSeasonEventLive.Form, :new
+    live "/series/:series_id/seasons/:season_id/events/:id", SeriesSeasonEventLive.Show, :show
+
+    live "/series/:series_id/seasons/:season_id/events/:id/edit",
+         SeriesSeasonEventLive.Form,
+         :edit
+
     live "/series/:series_id/sources", SeriesSourceLive.Index, :index
     live "/series/:series_id/sources/new", SeriesSourceLive.Form, :new
     live "/series/:series_id/sources/:id", SeriesSourceLive.Show, :show
