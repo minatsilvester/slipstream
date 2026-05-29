@@ -1,17 +1,11 @@
 defmodule Slipstream.Ingestion.Formula1CalendarParser do
   @moduledoc false
 
-  def parse(html, year) when is_binary(html) do
+  def parse(html, extraction_config) when is_binary(html) and is_map(extraction_config) do
     html
     |> Floki.parse_document!()
-    |> Floki.find("a")
-    |> Enum.filter(fn node ->
-      case Floki.attribute(node, "href") do
-        [href] -> String.starts_with?(href, "/en/racing/#{year}/")
-        _ -> false
-      end
-    end)
-    |> Enum.map(&parse_card/1)
+    |> Floki.find(extraction_config["card_selector"] || "a")
+    |> Enum.map(&parse_card(&1, extraction_config))
     |> Enum.reject(&is_nil/1)
   end
 
@@ -28,16 +22,21 @@ defmodule Slipstream.Ingestion.Formula1CalendarParser do
     }
   end
 
-  defp parse_card(node) do
+  defp parse_card(node, extraction_config) do
     href = Floki.attribute(node, "href") |> List.first()
     text = node |> Floki.text(sep: " ") |> String.trim()
+    kind = parse_kind(text)
 
-    with {:ok, kind} <- parse_kind(text),
-         {:ok, venue} <- parse_venue(text),
-         {:ok, date_label} <- parse_date_label(text) do
+    with {:ok, kind} <- kind,
+         {:ok, venue} <-
+           extract_or_parse(node, extraction_config["name_selector"], fn -> parse_venue(text) end),
+         {:ok, date_label} <-
+           extract_or_parse(node, extraction_config["date_selector"], fn ->
+             parse_date_label(text)
+           end) do
       %{
         kind: kind,
-        round: parse_round(text),
+        round: parse_round(extract_value_text(node, extraction_config["round_selector"]) || text),
         venue: venue,
         date_label: date_label,
         href: href,
@@ -62,6 +61,31 @@ defmodule Slipstream.Ingestion.Formula1CalendarParser do
       _ -> nil
     end
   end
+
+  defp extract_value(node, selector) when is_binary(selector) do
+    case extract_value_text(node, selector) do
+      nil -> :error
+      value -> {:ok, value}
+    end
+  end
+
+  defp extract_value(_node, _selector), do: :error
+
+  defp extract_or_parse(node, selector, fallback) do
+    case extract_value(node, selector) do
+      :error -> fallback.()
+      value -> value
+    end
+  end
+
+  defp extract_value_text(node, selector) when is_binary(selector) do
+    case Floki.find(node, selector) do
+      [match | _] -> Floki.text(match, sep: " ") |> String.trim()
+      _ -> nil
+    end
+  end
+
+  defp extract_value_text(_node, _selector), do: nil
 
   defp parse_venue(text) do
     prefix =

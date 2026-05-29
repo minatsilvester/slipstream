@@ -23,7 +23,8 @@ defmodule Slipstream.Ingestion.Formula1CalendarParserTest do
     </a>
     """
 
-    entries = Formula1CalendarParser.parse(html, 2026)
+    config = Formula1CalendarParser.extraction_config(2026)
+    entries = Formula1CalendarParser.parse(html, config)
 
     assert [
              %{
