@@ -12,6 +12,7 @@ defmodule Slipstream.Motorsport.Series do
     field :official_website, :string
     field :is_active, :boolean, default: false
     field :metadata, :map
+    has_many :seasons, Slipstream.Motorsport.Season
     has_many :sources, Slipstream.Motorsport.SeriesSource
 
     timestamps(type: :utc_datetime)

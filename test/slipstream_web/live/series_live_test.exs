@@ -43,8 +43,9 @@ defmodule SlipstreamWeb.SeriesLiveTest do
   defp create_series_with_source(_) do
     series = series_fixture()
     series_source = series_source_fixture(series: series)
+    season = season_fixture(series: series)
 
-    %{series: series, series_source: series_source}
+    %{series: series, series_source: series_source, season: season}
   end
 
   describe "Index" do
@@ -123,13 +124,20 @@ defmodule SlipstreamWeb.SeriesLiveTest do
   describe "Show" do
     setup [:create_series_with_source]
 
-    test "displays series", %{conn: conn, series: series, series_source: series_source} do
+    test "displays series", %{
+      conn: conn,
+      series: series,
+      series_source: series_source,
+      season: season
+    } do
       {:ok, show_live, _html} = live(conn, ~p"/admin/series/#{series}")
 
       assert has_element?(show_live, "#series-overview")
       assert has_element?(show_live, "#series-links")
       assert has_element?(show_live, "#series-actions")
+      assert has_element?(show_live, "#series-seasons-section")
       assert has_element?(show_live, "#series-sources-section")
+      assert has_element?(show_live, "#series_seasons-#{season.id}")
       assert has_element?(show_live, "#series_sources-#{series_source.id}")
     end
 
@@ -156,6 +164,7 @@ defmodule SlipstreamWeb.SeriesLiveTest do
 
       assert has_element?(show_live, "#series-overview")
       assert has_element?(show_live, "#series-actions")
+      assert has_element?(show_live, "#series-seasons-section")
       assert has_element?(show_live, "#series-sources-section")
       assert has_element?(show_live, "#series-status")
     end

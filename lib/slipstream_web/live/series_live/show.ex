@@ -170,6 +170,12 @@ defmodule SlipstreamWeb.SeriesLive.Show do
                 <.icon name="hero-rss" /> Manage sources
               </.button>
               <.button
+                id="series-manage-seasons-action"
+                navigate={~p"/admin/series/#{@series}/seasons"}
+              >
+                <.icon name="hero-calendar-days" /> Manage seasons
+              </.button>
+              <.button
                 id="series-add-source-action"
                 navigate={~p"/admin/series/#{@series}/sources/new"}
               >
@@ -179,6 +185,70 @@ defmodule SlipstreamWeb.SeriesLive.Show do
           </section>
         </aside>
       </div>
+
+      <section
+        id="series-seasons-section"
+        class="mt-6 rounded-box border border-base-300 bg-base-100 p-5"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/60">
+              Seasons
+            </p>
+            <h2 class="mt-1 text-lg font-semibold text-base-content">
+              Calendar years
+            </h2>
+          </div>
+
+          <.button navigate={~p"/admin/series/#{@series}/seasons/new"}>
+            <.icon name="hero-plus" /> New season
+          </.button>
+        </div>
+
+        <%= if @series_seasons_empty? do %>
+          <div
+            id="series-seasons-empty"
+            class="mt-6 rounded-box border border-dashed border-base-300 bg-base-200/40 px-5 py-8 text-center"
+          >
+            <p class="font-medium text-base-content">No seasons have been created yet.</p>
+            <p class="mt-2 text-sm text-base-content/70">
+              Add a season for the current calendar year before importing events.
+            </p>
+            <div class="mt-5">
+              <.button variant="primary" navigate={~p"/admin/series/#{@series}/seasons/new"}>
+                <.icon name="hero-plus" /> Add season
+              </.button>
+            </div>
+          </div>
+        <% else %>
+          <div class="mt-5 overflow-x-auto">
+            <.table
+              id="series-seasons"
+              rows={@streams.series_seasons}
+              row_click={
+                fn {_id, season} -> JS.navigate(~p"/admin/series/#{@series}/seasons/#{season}") end
+              }
+            >
+              <:col :let={{_id, season}} label="Year">{season.year}</:col>
+              <:col :let={{_id, season}} label="Current">
+                <span class={["badge", (season.is_current && "badge-success") || "badge-ghost"]}>
+                  {(season.is_current && "Current") || "Archived"}
+                </span>
+              </:col>
+              <:col :let={{_id, season}} label="Starts on">{format_date(season.starts_on)}</:col>
+              <:col :let={{_id, season}} label="Ends on">{format_date(season.ends_on)}</:col>
+              <:action :let={{_id, season}}>
+                <div class="sr-only">
+                  <.link navigate={~p"/admin/series/#{@series}/seasons/#{season}"}>Show</.link>
+                </div>
+                <.link navigate={~p"/admin/series/#{@series}/seasons/#{season}/edit"}>
+                  Edit
+                </.link>
+              </:action>
+            </.table>
+          </div>
+        <% end %>
+      </section>
 
       <section
         id="series-sources-section"
@@ -250,14 +320,18 @@ defmodule SlipstreamWeb.SeriesLive.Show do
   def mount(%{"id" => id}, _session, socket) do
     series = Motorsport.get_series!(id)
     series_sources = Motorsport.list_series_sources(series)
+    series_seasons = Motorsport.list_seasons(series)
 
     {:ok,
      socket
      |> assign(:page_title, "Show Series")
      |> assign(:series, series)
      |> assign(:series_source_count, length(series_sources))
+     |> assign(:series_season_count, length(series_seasons))
      |> assign(:series_sources_empty?, series_sources == [])
-     |> stream(:series_sources, series_sources)}
+     |> assign(:series_seasons_empty?, series_seasons == [])
+     |> stream(:series_sources, series_sources)
+     |> stream(:series_seasons, series_seasons)}
   end
 
   defp series_description(nil), do: "No description has been added yet."
@@ -266,4 +340,7 @@ defmodule SlipstreamWeb.SeriesLive.Show do
 
   defp metadata_text(nil), do: "{}"
   defp metadata_text(metadata), do: inspect(metadata)
+
+  defp format_date(nil), do: "Not set"
+  defp format_date(date), do: Calendar.strftime(date, "%Y-%m-%d")
 end

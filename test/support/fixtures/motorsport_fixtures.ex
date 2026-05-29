@@ -53,4 +53,25 @@ defmodule Slipstream.MotorsportFixtures do
 
     series_source
   end
+
+  @doc """
+  Generate a season.
+  """
+  def season_fixture(attrs \\ %{}) do
+    attrs = Map.new(attrs)
+    series = Map.get_lazy(attrs, :series, fn -> series_fixture() end)
+    attrs = Map.drop(attrs, [:series])
+
+    {:ok, season} =
+      attrs
+      |> Enum.into(%{
+        ends_on: ~D[2026-12-31],
+        is_current: true,
+        starts_on: ~D[2026-03-08],
+        year: 2026
+      })
+      |> then(&Slipstream.Motorsport.create_season(series, &1))
+
+    season
+  end
 end

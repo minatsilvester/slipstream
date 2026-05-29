@@ -7,6 +7,7 @@ defmodule Slipstream.Motorsport do
   alias Slipstream.Repo
 
   alias Slipstream.Motorsport.Series
+  alias Slipstream.Motorsport.Season
 
   @doc """
   Returns the list of series.
@@ -100,6 +101,61 @@ defmodule Slipstream.Motorsport do
   """
   def change_series(%Series{} = series, attrs \\ %{}) do
     Series.changeset(series, attrs)
+  end
+
+  @doc """
+  Returns the list of seasons for a series.
+  """
+  def list_seasons(%Series{} = series), do: list_seasons(series.id)
+
+  def list_seasons(series_id) do
+    Season
+    |> where([season], season.series_id == ^series_id)
+    |> order_by([season], desc: season.year)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single season scoped to its parent series.
+  """
+  def get_season!(%Series{} = series, id), do: get_season!(series.id, id)
+
+  def get_season!(series_id, id) do
+    Repo.get_by!(Season, id: id, series_id: series_id)
+  end
+
+  @doc """
+  Creates a season for a series.
+  """
+  def create_season(%Series{} = series, attrs), do: create_season(series.id, attrs)
+
+  def create_season(series_id, attrs) do
+    %Season{series_id: series_id}
+    |> Season.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a season.
+  """
+  def update_season(%Season{} = season, attrs) do
+    season
+    |> Season.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a season.
+  """
+  def delete_season(%Season{} = season) do
+    Repo.delete(season)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking season changes.
+  """
+  def change_season(%Season{} = season, attrs \\ %{}) do
+    Season.changeset(season, attrs)
   end
 
   alias Slipstream.Motorsport.SeriesSource
