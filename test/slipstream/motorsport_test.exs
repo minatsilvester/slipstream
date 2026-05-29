@@ -104,6 +104,110 @@ defmodule Slipstream.MotorsportTest do
     end
   end
 
+  describe "seasons" do
+    alias Slipstream.Motorsport.Season
+
+    import Slipstream.MotorsportFixtures
+
+    @valid_attrs %{
+      year: 2026,
+      starts_on: ~D[2026-03-08],
+      ends_on: ~D[2026-12-06],
+      is_current: true
+    }
+
+    @invalid_attrs %{
+      year: nil,
+      starts_on: nil,
+      ends_on: nil,
+      is_current: nil
+    }
+
+    test "list_seasons/1 returns seasons scoped to a series" do
+      series = series_fixture()
+      other_series = series_fixture(name: "Other series", short_name: "OS")
+      season = season_fixture(series: series, year: 2026)
+      _other_season = season_fixture(series: other_series, year: 2025)
+
+      assert [listed_season] = Motorsport.list_seasons(series)
+      assert listed_season.id == season.id
+    end
+
+    test "get_season!/2 returns the season with given id in the series scope" do
+      series = series_fixture()
+      other_series = series_fixture(name: "Other series", short_name: "OS")
+      season = season_fixture(series: series, year: 2026)
+
+      assert Motorsport.get_season!(series, season.id).id == season.id
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Motorsport.get_season!(other_series, season.id)
+      end
+    end
+
+    test "create_season/2 with valid data creates a season" do
+      series = series_fixture()
+
+      assert {:ok, %Season{} = season} = Motorsport.create_season(series, @valid_attrs)
+      assert season.series_id == series.id
+      assert season.year == 2026
+      assert season.starts_on == ~D[2026-03-08]
+      assert season.ends_on == ~D[2026-12-06]
+      assert season.is_current == true
+    end
+
+    test "create_season/2 with invalid data returns error changeset" do
+      series = series_fixture()
+
+      assert {:error, %Ecto.Changeset{}} = Motorsport.create_season(series, @invalid_attrs)
+    end
+
+    test "create_season/2 enforces unique years per series" do
+      series = series_fixture()
+      assert {:ok, %Season{}} = Motorsport.create_season(series, @valid_attrs)
+      assert {:error, changeset} = Motorsport.create_season(series, @valid_attrs)
+
+      assert "has already been taken" in errors_on(changeset).year
+    end
+
+    test "update_season/2 with valid data updates the season" do
+      season = season_fixture()
+
+      update_attrs = %{
+        year: 2027,
+        starts_on: ~D[2027-03-01],
+        ends_on: ~D[2027-12-12],
+        is_current: false
+      }
+
+      assert {:ok, %Season{} = season} = Motorsport.update_season(season, update_attrs)
+      assert season.year == 2027
+      assert season.starts_on == ~D[2027-03-01]
+      assert season.ends_on == ~D[2027-12-12]
+      assert season.is_current == false
+    end
+
+    test "update_season/2 with invalid data returns error changeset" do
+      season = season_fixture()
+      assert {:error, %Ecto.Changeset{}} = Motorsport.update_season(season, @invalid_attrs)
+      assert season == Motorsport.get_season!(season.series_id, season.id)
+    end
+
+    test "delete_season/1 deletes the season" do
+      season = season_fixture()
+      assert {:ok, %Season{}} = Motorsport.delete_season(season)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Motorsport.get_season!(season.series_id, season.id)
+      end
+    end
+
+    test "change_season/1 returns a season changeset" do
+      season = season_fixture()
+      assert %Ecto.Changeset{} = Motorsport.change_season(season)
+    end
+  end
+
   describe "series_sources" do
     alias Slipstream.Motorsport.SeriesSource
 
