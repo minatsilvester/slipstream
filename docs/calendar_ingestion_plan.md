@@ -63,7 +63,7 @@ Recommended constraint:
 - unique index on `[series_id, year]`
 
 ### `events`
-Status: not started
+Status: done
 
 Purpose:
 - Store the parsed races and related session data for a season.
@@ -160,12 +160,14 @@ Expose basic sync status in the admin UI:
 | Task | Status | Notes |
 | --- | --- | --- |
 | Add `seasons` table | done | Unique by series/year |
-| Add `events` table | not started | Store parsed race calendar |
+| Add `events` table | done | Season-scoped events schema and CRUD exist |
 | Add ingestion run tracking | not started | Keep raw payload and status |
 | Add calendar parser for F1 2026 page | done | Parser exists and is tested against the F1 page shape |
 | Add dynamic supervisor for scraper workers | done | Added to application supervision tree |
 | Add manual sync domain function | done | `Motorsport.sync_season_calendar/1` |
 | Add admin sync action | done | Season show page trigger + status display |
+| Add event admin LiveViews | done | Nested under seasons for list, show, create, edit, and delete |
+| Add season events entry point | done | Season show page links directly to events |
 | Add tests for parsing and persistence | partial | Parser and LiveView tests exist; persistence tests remain |
 
 ## Notes
